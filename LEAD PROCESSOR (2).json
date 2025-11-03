@@ -1,0 +1,506 @@
+{
+  "name": "Lead processor",
+  "nodes": [
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1232,
+        160
+      ],
+      "id": "7f474475-b344-45b3-ad34-f836ebfafb42",
+      "name": "Wait",
+      "webhookId": "3235e209-4551-44d6-8b92-f1e43232ff9f"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/vdrmota~contact-info-scraper/runs?tokenapify_api_srpOuaqngWLbjKgRlGiZgBac7E0q6R3CmwDZapify_api_srpOuaqngWLbjKgRlGiZgBac7E0q6R3CmwDZ&waitForFinish=60",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "json",
+        "body": "return JSON.stringify({   startUrls: $items(\"Clean urls\").map(i => i.json.website ? { url: i.json.website } : null).filter(x => x),   maxDepth: 2,   maxPagesPerDomain: 5,   searchEmails: true,   searchPhones: true });",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -816,
+        160
+      ],
+      "id": "7af7e087-7b85-4181-bc36-c3e3ec1b009f",
+      "name": "contact Details scraper"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/actor-runs/{{ $json[\"data\"][\"id\"] }}\n/dataset/items?token=apify_api_fjW86V1sSkm5ZEoD3HZtMghqpP2OkK1pE8Gf",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Headers",
+              "value": "Bearer apify_api_fjW86V1sSkm5ZEoD3HZtMghqpP2OkK1pE8Gf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        160
+      ],
+      "id": "1b71f462-fee1-4b4d-a086-cff962ad402d",
+      "name": "Get Dataset"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE",
+          "mode": "list",
+          "cachedResultName": "Lead sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "domain",
+              "displayName": "domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "EMAIL STATUS",
+              "displayName": "EMAIL STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI EMAIL",
+              "displayName": "AI EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        352
+      ],
+      "id": "3fc93b9e-1a28-4d09-a94f-0294b8875410",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "juCaTmGXEkLAXz34",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "emails, phonesUncertain[1], linkedIns[0], twitters[0], youtubes[1],",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        224,
+        352
+      ],
+      "id": "acb7a633-24d7-4045-a3f4-485548b0ea59",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node: Generate Email Patterns\n// Input: items where item.json.companyName and item.json.website exist\n// Output: items, each with json: { companyName, website, candidate }\nconst out = [];\n\nfunction domainFromUrl(url) {\n  if (!url) return '';\n  // remove protocol and path\n  let d = url.toString().trim().replace(/^https?:\\/\\//, '').replace(/^www\\./, '');\n  d = d.split('/')[0];\n  return d.toLowerCase();\n}\n\nfunction nameParts(name) {\n  if (!name) return [];\n  const p = name.trim().replace(/\\s+/g,' ').split(' ');\n  return p;\n}\n\nfor (const it of items) {\n  const companyName = it.json.companyName || it.json.title || '';\n  const website = it.json.website || it.json.url || '';\n  const domain = domainFromUrl(website);\n  // you might have scraped person names (team) into it.json.people array; try to use them:\n  let people = [];\n  if (it.json.people && Array.isArray(it.json.people)) {\n    people = it.json.people.map(p => p.name).filter(Boolean);\n  } else if (it.json.contactPersons && Array.isArray(it.json.contactPersons)) {\n    people = it.json.contactPersons.map(p => p.name).filter(Boolean);\n  }\n  // default common role-based addresses\n  const seeds = [\n    `info@${domain}`,\n    `contact@${domain}`,\n    `hello@${domain}`,\n    `support@${domain}`,\n    `sales@${domain}`,\n    `admin@${domain}`,\n    `office@${domain}`,\n    `enquiries@${domain}`,\n    `marketing@${domain}`,\n    `careers@${domain}`\n  ];\n\n  // person-based patterns when we have names\n  const personPatterns = [];\n  for (const person of people) {\n    const parts = nameParts(person).map(s => s.replace(/[^a-zA-Z'-]/g,'').toLowerCase());\n    if (parts.length === 0) continue;\n    const first = parts[0];\n    const last = parts.length>1 ? parts[parts.length-1] : '';\n    if (first && last) {\n      personPatterns.push(`${first}.${last}@${domain}`);\n      personPatterns.push(`${first}${last}@${domain}`);\n      personPatterns.push(`${first}_${last}@${domain}`);\n      personPatterns.push(`${first[0]}${last}@${domain}`);\n      personPatterns.push(`${first}@${domain}`);\n      personPatterns.push(`${last}@${domain}`);\n    } else if (first) {\n      personPatterns.push(`${first}@${domain}`);\n    }\n  }\n\n  // merge and dedupe\n  const all = Array.from(new Set([...seeds, ...personPatterns]));\n\n  // output each candidate as its own item so we can MX-check per candidate easily\n  if (all.length === 0) {\n    // still produce one item with an empty candidate so later flow can record \"no candidate\"\n    out.push({ json: { companyName, website, candidate: '', domain } });\n  } else {\n    for (const c of all) {\n      out.push({ json: { companyName, website, candidate: c, domain } });\n    }\n  }\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3ad5b118-1e89-470a-8d2a-d5f6fe21980f",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bd7117e9-2548-4d7f-8861-5b12fec15ca0",
+              "leftValue": "={{ $json.emails }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        160
+      ],
+      "id": "7c3abfe4-40c2-4087-a8f4-165657cc0e73",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.hunter.io/v2/domain-search?domain={{$json[\"domain\"]}}&api_key=ac14762835587c10ce271b41901175ad284008d5\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "bac7b7ca-b970-4556-afd1-4a04f61d6d81",
+      "name": "Hunter email finder",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emails = $json.data?.emails || [];\n\nif (emails.length > 0) {\n  const firstEmail = emails[0].value;\n  return [{\n    company: $input.first().json.data.organization,\n    email: firstEmail,\n    Position: $input.first().json.data.emails[0].position,\n  }];\n} else {\n  return [{\n    company: $input.first().json.data.organization ,\n    email: 'Not Found',\n    Position: $input.first().json.data.emails[0].position,\n  }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c7c5ccaa-7f0d-46e7-9305-9e6f283e25b1",
+      "name": "parse hunter response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet result = [];\n\nfor (const item of items) {\n  // Get the body (could be an array or an object with a data array)\n  const body = item?.json?.body;\n\n  if (Array.isArray(body)) {\n    // body IS the list\n    result.push(...body.map(entry => ({\n      title: entry?.title ?? null,\n      website: entry?.website ?? null\n    })));\n  } else if (body?.data && Array.isArray(body.data)) {\n    // body contains a nested \"data\" list\n    result.push(...body.data.map(entry => ({\n      title: entry?.title ?? null,\n      website: entry?.website ?? null\n    })));\n  }\n}\n\n// Filter out invalid/empty ones\nresult = result.filter(entry => entry.title || entry.website);\n\n// Return as proper n8n output items\nreturn result.map(entry => ({ json: entry }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        160
+      ],
+      "id": "86b3afb1-77e1-4eee-b1fd-7deae7f6ea87",
+      "name": "Clean urls"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-processor",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1600,
+        160
+      ],
+      "id": "236ddc87-7733-4697-9627-6d1857ad707a",
+      "name": "Webhook",
+      "webhookId": "6c8a2efb-043d-4fa8-99f9-53f01d5da779",
+      "executeOnce": false
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "azula.app.n8n.cloud",
+            "user-agent": "axios/1.12.0",
+            "content-length": "768",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "4.184.78.240",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "DE",
+            "cf-ray": "995a04825569dca5-FRA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "4.184.78.240, 172.71.148.124",
+            "x-forwarded-host": "azula.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-80-5fc4f59987-9545r",
+            "x-is-trusted": "yes",
+            "x-real-ip": "4.184.78.240"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "title": "Fintech Umbrella Financial Services",
+              "website": "http://fintechumbrella.com/"
+            },
+            {
+              "title": "Figure Technologies",
+              "website": "https://www.figure.com/"
+            },
+            {
+              "title": "Outsource Financial Services",
+              "website": "https://outsourcefinancialservices.com/?utm_source=google&utm_medium=organic&utm_campaign=gmb_listing"
+            },
+            {
+              "title": "Financial Technology Partners (FT Partners)",
+              "website": "http://www.ftpartners.com/"
+            },
+            {
+              "title": "High Valley Financial Planning Services",
+              "website": "http://highvalley-fps.com/"
+            },
+            {
+              "title": "Macroaxis",
+              "website": "https://www.macroaxis.com/"
+            },
+            {
+              "title": "Finpeak",
+              "website": "http://finpeak.com/"
+            },
+            {
+              "title": "Financial Zen",
+              "website": "http://www.financialzen.com/"
+            },
+            {
+              "title": "Zumigo",
+              "website": "http://www.zumigo.com/"
+            },
+            {
+              "title": "Financial Navigator Inc"
+            }
+          ],
+          "webhookUrl": "https://azula.app.n8n.cloud/webhook-test/lead-processor",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "contact Details scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "contact Details scraper": {
+      "main": [
+        [
+          {
+            "node": "Get Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Dataset": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Hunter email finder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter email finder": {
+      "main": [
+        [
+          {
+            "node": "parse hunter response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse hunter response": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean urls": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Clean urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4dbf203b-8fb9-4d14-a25a-84a6d163f094",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "rZQedkyKushkaGNU",
+  "tags": []
+}

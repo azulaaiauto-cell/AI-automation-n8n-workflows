@@ -1,0 +1,470 @@
+{
+  "name": "cold mail",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fd6d75f1-5fc6-4619-b49d-87ab1d1e46f4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE",
+          "mode": "list",
+          "cachedResultName": "Lead sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        0
+      ],
+      "id": "cd7fea7f-ab3e-43ff-90aa-d402811d1688",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "juCaTmGXEkLAXz34",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "15ee93c487e6419ef94e00b86f5b5eed56afa562"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=\n\n{\n  \"q\": \"{{$json['company'] ? `${$json['company']} site:${$json['domain']}` : 'site:example.com'}}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        -16
+      ],
+      "id": "77fe9127-213c-4a4d-a973-529477672e2e",
+      "name": "serper search"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const results = item.json.organic || [];\n  const summary = results.slice(0, 3).map(r => r.snippet).join(\" \");\n  return {\n    json: {\n      company_name: item.json.company,\n      website: item.json.domain,\n      research_summary: summary\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "0d02f97f-d606-4b1a-a00e-f20fb5e3fedb",
+      "name": "summarize search result"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert cold email copywriter.\n\nResearch summary:\n{{ $json[\"research_summary\"] }}\n\nCompany: {{ $('Get row(s) in sheet').item.json.company }}\nWebsite: {{ $('Get row(s) in sheet').item.json.domain }}\n\nWrite a 4-sentence personalized cold email pitching our product or service.\nThe tone should be professional, warm, and human.\nAvoid sounding robotic. Keep it under 100 words.\nEnd with a friendly call-to-action, it could be a call or anything else that seems appealing to human emotions.\n\nAlso i wantthe message personalised and ready to be sent immediately, but i want it dynamic so let italways start with  Hi, {{ $('Get row(s) in sheet').item.json.Position }}  before the body of the message \n",
+              "role": "assistant"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1040,
+        -16
+      ],
+      "id": "5192f72e-d6fb-463e-832a-af3b840cab02",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "t8rKrJTnTYN7Zg8Q",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE",
+          "mode": "list",
+          "cachedResultName": "Lead sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AInZ4OgNEOeH0ottuMWlGLtFsLjOz6L9HDmqGdiY-aE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "AI Summary": "={{ $('summarize search result').item.json.research_summary }}",
+            "AI EMAIL": "={{ $('Message a model').item.json.message.content }}",
+            "EMAIL STATUS": "sent",
+            "row_number": "={{ $('Get row(s) in sheet').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "domain",
+              "displayName": "domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "EMAIL STATUS",
+              "displayName": "EMAIL STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI EMAIL",
+              "displayName": "AI EMAIL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1632,
+        -16
+      ],
+      "id": "8eadf48c-37d7-4b1a-b5ef-0c1bc6162876",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "juCaTmGXEkLAXz34",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get row(s) in sheet').item.json.email }}",
+        "subject": "=Hello {{ $('Get row(s) in sheet').item.json.Position }}! Don't Miss This!",
+        "emailType": "text",
+        "message": "={{ $('Message a model').item.json.message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1408,
+        -16
+      ],
+      "id": "2dfaa253-f933-44ca-93cb-4f1d35d39c42",
+      "name": "Send a message",
+      "webhookId": "51dd63ad-545f-4247-a5e2-1650b991fcfe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NovxbznawUTkzpLc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "59f10622-e73e-4a0d-aa27-c7c41a2c4ae2",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1904,
+        -48
+      ],
+      "id": "edb90a02-4d17-4133-8889-0c85e47cac8d",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "Message a model": [
+      {
+        "json": {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Hi, Director,\n\nI came across Azulaai agency and was impressed by your innovative approach to digital marketing. We specialize in creating tailored strategies that help agencies like yours boost client engagement and drive measurable results. I’d love to share how our expertise can support your growth goals and lighten your team’s workload. Would you be open to a brief call next week to explore the possibilities?",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      },
+      {
+        "json": {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Hi, Director,\n\nI’m truly impressed by FT Partners’ dedicated focus on transformative FinTech deals and your role in shaping the sector’s future. Given your commitment to world-class advisory services, I’d love to share how our [product/service] can streamline your deal sourcing and enhance your client insights. Could we find 15 minutes this week for a quick chat to explore how this might support your team’s exceptional work? Looking forward to connecting and seeing how we can contribute to FT Partners’ continued success.",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      },
+      {
+        "json": {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Hi Director,\n\nI’ve been following FT Partners’ insightful work shaping the FinTech landscape, and I admire how your team leverages deep industry expertise to drive impactful deals. We specialize in [briefly describe your product/service], designed to streamline processes and unlock new efficiencies tailored for FinTech firms like yours. I’d love to explore how we can support your mission to stay ahead in this fast-evolving market. Would you be open to a quick chat next week to see if there’s a fit?\n\nBest regards,  \n[Your Name]",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "serper search": {
+      "main": [
+        [
+          {
+            "node": "summarize search result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "summarize search result": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "serper search",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c3497f25-c5dc-4e41-8c26-6513b3a097ea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "UtNtifc9Q5LrkPT2",
+  "tags": []
+}

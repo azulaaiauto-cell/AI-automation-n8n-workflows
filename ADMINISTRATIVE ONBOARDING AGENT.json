@@ -1,0 +1,729 @@
+{
+  "name": "Admission & scholarship automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e4b83ed4-227a-4266-98da-8b6aecd63bdc",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1248,
+        448
+      ],
+      "id": "da8afb92-d2df-4e47-abd2-443914f01e7d",
+      "name": "Webhook",
+      "webhookId": "e4b83ed4-227a-4266-98da-8b6aecd63bdc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d662846-a939-4828-a91a-08e3284047a7",
+              "name": "=Name",
+              "value": "Favour Okeke",
+              "type": "string"
+            },
+            {
+              "id": "2b8a9a2c-d706-4f2f-9630-647ec3107e1b",
+              "name": "Email",
+              "value": "fokeke751@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "80938433-0284-4104-9f0f-1bb443d949c1",
+              "name": "Phone Number",
+              "value": "8148532358",
+              "type": "string"
+            },
+            {
+              "id": "6cc2c9aa-7408-47fb-8305-e92a0837310f",
+              "name": "GPA (Grade Point Average)",
+              "value": "3.7",
+              "type": "string"
+            },
+            {
+              "id": "2a4ca8ba-d16a-457b-9a31-957c71c5cf61",
+              "name": "SAT SCORE",
+              "value": "1600",
+              "type": "string"
+            },
+            {
+              "id": "ea1f75eb-2ca2-4c85-b2fc-a96f3e74cdf9",
+              "name": "MAJOR",
+              "value": "History and International Relations",
+              "type": "string"
+            },
+            {
+              "id": "4d1e50ec-03ff-46d6-ba10-f10d087d285f",
+              "name": "Essay",
+              "value": "I am Passionate about education",
+              "type": "string"
+            },
+            {
+              "id": "a9d6dccd-343d-405a-a16e-8e981f4e4b12",
+              "name": "EXTRACURRICULAR",
+              "value": "art festival club, Nahiss club",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        448
+      ],
+      "id": "1f281cc8-7aaf-4459-8e06-bbbbc49092e4",
+      "name": "extract output data"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -928,
+        688
+      ],
+      "id": "43730cd7-8e01-4216-b18a-790655e790db",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Student details:\nName: {{ $json[\"Name\"] }}\nEmail: {{ $json[\"Email\"] }}\nGPA: {{ $json[\"GPA (Grade Point Average)\"] }}\nSAT Score: {{ $json[\"SAT SCORE\"] }}\nMajor: {{ $json[\"MAJOR\"] }}\nEssay: {{ $json[\"Essay\"] }}\nExtracurricular: {{ $json[\"EXTRACURRICULAR\"] }}\n\nEvaluate the student’s eligibility based on their GPA and SAT Score.",
+        "options": {
+          "systemMessage": "=You are an experienced college admissions evaluator. Your job is to analyze student academic performance based on their GPA (Grade Point Average) and SAT score. You must evaluate carefully and provide objective reasoning for your decision.\n\nYou are to evaluate a student's eligibility for admission using the following data:\n\nName: {{ $json[\"Name\"] }}\nEmail: {{ $json[\"Email\"] }}\nGPA: {{ $json[\"GPA (Grade Point Average)\"] }}\nSAT Score: {{ $json[\"SAT SCORE\"] }}\nMajor: {{ $json[\"MAJOR\"] }}\nEssay: {{ $json[\"Essay\"] }}\nExtracurricular: {{ $json[\"EXTRACURRICULAR\"] }}\n\n### Evaluation Criteria:\n1. **Academic Strength**\n   - A GPA of 3.5 or higher is considered strong.\n   - SAT score of 1400 or higher is considered strong.\n   - GPA between 3.0 - 3.49 is average, below 3.0 is weak.\n   - SAT between 1200 - 1399 is moderate, below 1200 is weak.\n\n2. **Balance and Dedication**\n   - Evaluate how the essay and extracurricular activities support the student’s major and academic seriousness.\n\n3. **Final Verdict**\n   - If both GPA and SAT are strong, or if one is strong and the essay/extracurriculars show exceptional effort, mark as **ACCEPT**.\n   - If both are below average, or the student shows lack of academic strength or effort, mark as **REJECT**.\n\n  - If the student somehow has an average result that cannot really be categorised, mark as **UNDETERMINED** \n\n\n### Your Task:\n- Give a detailed **feedback paragraph** summarizing your evaluation.\n- Then clearly state the **Final Decision** as either:\n  - `ACCEPT`\n  - `REJECT`\n  - `UNDETERMINED`\n### Output Format (strictly follow this format):\n{\n  \"name\": \"{{ $json[\"Name\"] }}\",\n  \"evaluation_summary\": \"Your detailed analysis here.\",\n  \"final_decision\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        448
+      ],
+      "id": "cc7f5694-1f59-4a62-bfc2-f81c531b2b54",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "let output = $json;\n\n// STEP 1: Try to extract the raw AI text\nlet raw = output.response || output.data || output.output || JSON.stringify(output);\n\n// STEP 2: Try to parse JSON if it looks like one\nif (typeof raw === \"string\") {\n  try {\n    // If it's a valid JSON string, parse it\n    const parsed = JSON.parse(raw);\n    if (parsed && (parsed.final_decision || parsed.evaluation_summary)) {\n      output = parsed;\n    } else {\n      // Otherwise, use regex to extract info manually\n      output = {};\n      output.name = raw.match(/name[:\\-]?\\s*([^\\n,]+)/i)?.[1]?.trim() || \"Unknown\";\n      output.evaluation_summary = raw.match(/evaluation_summary[:\\-]?\\s*([^\\n]+)/i)?.[1]?.trim()\n        || raw.match(/summary[:\\-]?\\s*([^\\n]+)/i)?.[1]?.trim()\n        || \"No summary provided.\";\n      output.final_decision = raw.match(/decision[:\\-]?\\s*(ACCEPT|REJECT)/i)?.[1]?.toUpperCase()\n        || \"UNDETERMINED\";\n    }\n  } catch (e) {\n    // If it’s not JSON, try regex extraction again\n    output = {};\n    output.name = raw.match(/name[:\\-]?\\s*([^\\n,]+)/i)?.[1]?.trim() || \"Unknown\";\n    output.evaluation_summary = raw.match(/evaluation_summary[:\\-]?\\s*([^\\n]+)/i)?.[1]?.trim()\n      || raw.match(/summary[:\\-]?\\s*([^\\n]+)/i)?.[1]?.trim()\n      || \"No summary provided.\";\n    output.final_decision = raw.match(/decision[:\\-]?\\s*(ACCEPT|REJECT)/i)?.[1]?.toUpperCase()\n      || \"UNDETERMINED\";\n  }\n}\n\n// STEP 3: Clean and return result\nreturn [\n  {\n    json: {\n      name: output.name,\n      evaluation_summary: output.evaluation_summary,\n      final_decision: output.final_decision,\n      raw_response: raw\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        448
+      ],
+      "id": "98c4bf65-0bf5-4a1a-af09-7caef4513052",
+      "name": "Parse AI evaluation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c9ee6485-2de1-42b0-8cc6-03fe16bc0a30",
+              "leftValue": "={{ $json[\"final_decision\"] }}",
+              "rightValue": "ACCEPT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        240
+      ],
+      "id": "2ff25215-47d7-42a7-b330-cb9f8cfddc5e",
+      "name": "Accept?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "258cc82e-c33e-48f0-a382-6c02085a0d29",
+              "leftValue": "={{ $json.final_decision }}",
+              "rightValue": "UNDETERMINED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        608
+      ],
+      "id": "15b41d62-0a72-459c-b72e-92480a6a5d74",
+      "name": "Interview?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('extract output data').item.json.Email }}",
+        "subject": "Application Update",
+        "emailType": "text",
+        "message": "=Dear {{ $('extract output data').item.json.Name }},  \n\nThank you for applying. Unfortunately, your current GPA and SAT score did not meet our required criteria.  \n\nWe highly encourage you to apply again next session.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        864
+      ],
+      "id": "983da73d-db3b-4c5e-862e-03a9a4dfbe4f",
+      "name": "Reject message",
+      "webhookId": "031fb533-e87e-4c64-bb0b-b36fa34036ff"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('extract output data').item.json.Email }}",
+        "subject": "🎉 Congratulations on Your Acceptance!",
+        "emailType": "text",
+        "message": "=Dear{{ $('extract output data').item.json.Name }} , \n\n\nWe’re excited to inform you that your application has been reviewed and accepted!   Your outstanding academic performance — with a GPA of {{ $('extract output data').item.json['GPA (Grade Point Average)'] }} and an SAT score of {{ $('extract output data').item.json['SAT SCORE'] }}— reflects your commitment and excellence.   \n\nSummary of Evaluation:   “Excellent academic performance with strong extracurricular engagement and a clear passion for learning.”  We’re thrilled to welcome you on board and can’t wait to see the incredible impact you’ll make in the field of History and International Studies.    \n\n\n\nWarm regards,  \nAdmissions Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2f6ee3ca-e555-408d-909f-92049439f8d5",
+      "name": "congratulatory",
+      "webhookId": "ef89546b-a093-4e7a-a6ef-93173a60ffc0"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('extract output data').item.json.Email }}",
+        "subject": "Application Update ",
+        "message": "=<p>Dear {{ $json[\"name\"] }},</p>\n\n<p>We’d love to invite you for a short interview to complete your application review.</p>\n\n<p>Please click one of the options below to confirm:</p>\n\n<!-- ACCEPT BUTTON -->\n<a href=\"https://n8n.yourdomain.com/webhook/accept-interview?name={{ $json[\"name\"] | urlencode }}&email={{ $json[\"email\"] | urlencode }}\" \n   style=\"display:inline-block;background-color:#28a745;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;\">\n   ✅ Accept Interview\n</a>\n\n<!-- REJECT BUTTON -->\n<a href=https://favour.app.n8n.cloud/webhook-test/c13f312b-390c-45ba-8c50-fc5f9a08235bname={{ $json[\"name\"] | urlencode }}&email={{ $json[\"email\"] | urlencode }}\" \n   style=\"display:inline-block;background-color:#dc3545;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;margin-left:10px;\">\n   ❌ Decline\n</a>\n\n<p>We look forward to hearing from you soon!</p>\n\n<p>— Admissions Team</p>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        464
+      ],
+      "id": "5dc8afde-3405-41e3-aa82-d436d565b1e4",
+      "name": "Interview request",
+      "webhookId": "881a32a5-22e8-4623-93ce-ea046519b024"
+    },
+    {
+      "parameters": {
+        "sendTo": "azulaaiauto@gmail.com",
+        "subject": "New Scholar Update",
+        "emailType": "text",
+        "message": "=Hello Admissions Team,  We’re excited to announce that a new student has been officially admitted to the program!  \n\n\n📋 Student Details: \n\n• Name: {{ $('extract output data').item.json.Name }}\n• Email: {{ $('extract output data').item.json.Email }}\n• GPA: {{ $('extract output data').item.json['GPA (Grade Point Average)'] }}\n• SAT Score: {{ $('extract output data').item.json['SAT SCORE'] }}\n• Major:  {{ $('extract output data').item.json.MAJOR }}\n \n\n✅ Status: ACCEPTED  \n\nNext Steps: \n\n- The student’s record and application status will be updated in the admissions sheet shortly.   \n\n- Please proceed with onboarding, documentation, and welcome communication. \n\nLet’s make sure everything’s set for a smooth transition into the program.\n\n— Automated Admissions System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        224
+      ],
+      "id": "1a841f7f-cbf9-447a-91d9-798e4e64e49e",
+      "name": "Alert admissions team",
+      "webhookId": "733ffa88-f9e6-45ba-b73e-660065d14326"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TheatxItSglcfIqWFexETScb8JBoCGfcwRrxRBphrmc",
+          "mode": "list",
+          "cachedResultName": "Sholarship Update",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TheatxItSglcfIqWFexETScb8JBoCGfcwRrxRBphrmc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TheatxItSglcfIqWFexETScb8JBoCGfcwRrxRBphrmc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Final_decision": "={{ $json.final_decision }}",
+            "Name": "={{ $('extract output data').item.json.Name }}",
+            "Email": "={{ $('extract output data').item.json.Email }}",
+            "Phone Number": "={{ $('extract output data').item.json['Phone Number'] }}",
+            "GPA (Grade Point Average)": "={{ $('extract output data').item.json['GPA (Grade Point Average)'] }}",
+            "SAT SCORE": "={{ $('extract output data').item.json['SAT SCORE'] }}",
+            "MAJOR": "={{ $('extract output data').item.json.MAJOR }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "GPA (Grade Point Average)",
+              "displayName": "GPA (Grade Point Average)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SAT SCORE",
+              "displayName": "SAT SCORE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MAJOR",
+              "displayName": "MAJOR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Final_decision",
+              "displayName": "Final_decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        928,
+        416
+      ],
+      "id": "04e965aa-a6f6-460c-8ede-50873f8264bb",
+      "name": "Update"
+    },
+    {
+      "parameters": {
+        "path": "82da111d-6f9e-4aa4-a3bc-2ccef1250b59",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        1120
+      ],
+      "id": "cc8fe58b-b514-48fa-88d4-cea577542186",
+      "name": "Acceptinterviewwebhoook",
+      "webhookId": "82da111d-6f9e-4aa4-a3bc-2ccef1250b59"
+    },
+    {
+      "parameters": {
+        "path": "c13f312b-390c-45ba-8c50-fc5f9a08235b",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        1408
+      ],
+      "id": "8b53b872-1d99-4642-bda7-0a3b44d99d0b",
+      "name": "Rejectinterviewwebhook",
+      "webhookId": "c13f312b-390c-45ba-8c50-fc5f9a08235b"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        1120
+      ],
+      "id": "dcc00246-8f85-48bb-94e5-87d96168a224",
+      "name": "Send a message",
+      "webhookId": "d751e8d9-72c5-4984-b65c-1c4190e92260"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        1408
+      ],
+      "id": "05eb7901-b9f0-48fe-a027-ae660d30226c",
+      "name": "Send a message1",
+      "webhookId": "0c9be184-a5c1-42b0-8021-53eabc86df74",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e96e50b3-5c89-44ea-939a-fc43a5c63ba0",
+      "name": "Wait",
+      "webhookId": "31d32be9-9b8c-4558-b869-28ee09cef858"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        784
+      ],
+      "id": "0f54458c-67a1-4ff7-b150-2a55f0c7cad7",
+      "name": "Wait1",
+      "webhookId": "34460a1f-694a-43c6-bdbb-636e5d673e19"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "favour.app.n8n.cloud",
+            "content-length": "3812",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "34.159.12.87",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "DE",
+            "cf-ray": "9924d56b40c0d25d-FRA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "multipart/form-data; boundary=------------------------cFHVLX1kSJSAO2GMzLjlrj",
+            "newrelic": "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiNjkxNjIwIiwiYXAiOiIxMzUxMTUzOTQ2IiwiaWQiOiI2ZGQ4NjU4Mzg1NTJiMzYxIiwidHIiOiI5ODllZGE4YzYwMTM3M2Q4IiwidHgiOiI5ODllZGE4YzYwMTM3M2Q4IiwicHIiOjEuNTQwNzMsInNhIjp0cnVlLCJ0aSI6MTc2MTA5MjQ3NjY1MX19",
+            "traceparent": "00-0000000000000000989eda8c601373d8-6dd865838552b361-01",
+            "tracestate": "691620@nr=0-0-691620-1351153946-6dd865838552b361-989eda8c601373d8-1-1.540730-1761092476651",
+            "x-forwarded-for": "34.159.12.87, 172.71.164.104",
+            "x-forwarded-host": "favour.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-6-58b64db885-xzzlx",
+            "x-is-trusted": "yes",
+            "x-real-ip": "34.159.12.87"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "action": "",
+            "webhookURL": "https://favour.app.n8n.cloud/webhook-test/e4b83ed4-227a-4266-98da-8b6aecd63bdc",
+            "username": "fokeke751",
+            "formID": "252932469416060",
+            "type": "WEB",
+            "customParams": "",
+            "product": "",
+            "formTitle": "STUDENT SCHOLARSHIP ASSESSMENT FORM (AI EVALUATED)",
+            "customTitle": "",
+            "submissionID": "6369016762266669671",
+            "event": "",
+            "documentID": "",
+            "teamID": "",
+            "subject": "",
+            "isSilent": "",
+            "customBody": "",
+            "rawRequest": "{\"slug\":\"submit\\/252932469416060\",\"jsExecutionTracker\":\"build-date-1761047386560=>init-started:1761092261594=>validator-called:1761092261597=>validator-mounted-false:1761092261597=>init-complete:1761092261600=>interval-complete:1761092282602=>onsubmit-fired:1761092475828=>observerSubmitHandler_received-submit-event:1761092475828=>submit-validation-passed:1761092475836=>observerSubmitHandler_validation-passed-submitting-form:1761092475844\",\"submitSource\":\"form\",\"submitDate\":\"1761092475844\",\"buildDate\":\"1761047386560\",\"uploadServerUrl\":\"https:\\/\\/upload.jotform.com\\/upload\",\"eventObserver\":\"1\",\"q3_name\":{\"first\":\"Favour\",\"last\":\"Okeke\"},\"q5_email\":\"fokeke751@gmail.com\",\"q6_phoneNumber\":{\"full\":\"(814) 853-2358\"},\"q7_gpagrade\":\"2.9\",\"q8_satScore\":\"1100\",\"q11_major\":\"Computer Science\",\"q10_essay\":\"i need the scholarship\",\"q12_extracurricular\":\"Robotics\",\"event_id\":\"1761092261594_252932469416060_oWySXPI\",\"timeToSubmit\":\"20\",\"validatedNewRequiredFieldIDs\":\"{\\\"new\\\":1}\",\"path\":\"\\/submit\\/252932469416060\"}",
+            "fromTable": "",
+            "appID": "",
+            "pretty": "Name:Favour Okeke, Email:fokeke751@gmail.com, Phone Number:(814) 853-2358, GPA (Grade Point Average):2.9, SAT SCORE:1100, MAJOR:Computer Science, ESSAY:i need the scholarship, EXTRACURRICULAR:Robotics",
+            "unread": "",
+            "parent": "",
+            "ip": "129.222.206.22"
+          },
+          "webhookUrl": "https://favour.app.n8n.cloud/webhook-test/e4b83ed4-227a-4266-98da-8b6aecd63bdc",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "extract output data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract output data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI evaluation": {
+      "main": [
+        [
+          {
+            "node": "Accept?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Interview?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interview?": {
+      "main": [
+        [
+          {
+            "node": "Interview request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "congratulatory": {
+      "main": [
+        [
+          {
+            "node": "Alert admissions team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert admissions team": {
+      "main": [
+        [
+          {
+            "node": "Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reject message": {
+      "main": [
+        [
+          {
+            "node": "Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acceptinterviewwebhoook": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rejectinterviewwebhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "congratulatory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Reject message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d75ab553-fe6e-4ad6-a3b5-4fb549d02dfe",
+  "meta": {
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "6st1I3Wb4K8EgCeM",
+  "tags": []
+}

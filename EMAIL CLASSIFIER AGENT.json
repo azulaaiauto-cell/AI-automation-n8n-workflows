@@ -1,0 +1,631 @@
+{
+  "name": "AI EMAIL CLASSIFIER",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "1d98b077-e5f3-4b5f-a074-99c50d304651",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject:{{ $json.headers.subject }}\n\n\nBody:{{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Customer Support",
+              "description": "Emails requesting help, troubleshooting, or guidance for a product or service. Usually describe issues like login errors, bugs, or malfunctioning features. Common keywords: error, issue, problem, help, access, support, fix, reset, troubleshoot."
+            },
+            {
+              "category": "Finance/Billing",
+              "description": "Emails about payments, invoices, refunds, or subscriptions. The sender wants to confirm, dispute, or update financial details. Common keywords: invoice, payment, refund, billing, charge, subscription, renewal, receipt."
+            },
+            {
+              "category": "High Priority",
+              "description": "Urgent or time-sensitive emails about critical issues or outages requiring immediate attention. Common keywords: urgent, ASAP, critical, outage, down, immediate, emergency, escalation."
+            },
+            {
+              "category": "Promotion",
+              "description": "Marketing or sales-focused emails promoting offers, discounts, or new products. Tone is upbeat and persuasive. Common keywords: sale, offer, discount, promotion, new feature, upgrade, limited time, exclusive."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -32
+      ],
+      "id": "4624d989-15e7-4308-af85-26ac5535555b",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -576
+      ],
+      "id": "212a4784-29ca-477c-ab53-19cfe9cabaa3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "t8rKrJTnTYN7Zg8Q",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject: {{ $('Gmail Trigger').item.json.subject }}\n\n\nBody:{{ $('Gmail Trigger').item.json.text }}",
+        "options": {
+          "systemMessage": "You are **Azula's Ai assistant**, an expert customer support assistant for an AI automation society.  \nYour role is to help users by providing accurate, friendly, and professional responses to their queries.  \n\nGuidelines:\n- Always communicate in a clear, empathetic, and approachable tone.  \n- Provide correct and detailed information when available.  \n- If you cannot confidently answer a question, politely direct the user to contact @zulatrades@gmail.com for further assistance.  \n- Always sign off every message with:  \n  **Azula's Ai assistant**\n\nExample sign-off:\nThank you for reaching out.  \nAzula's Ai assistant\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        -320
+      ],
+      "id": "3e625022-1622-45ec-8268-60606aa4c56c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        -320
+      ],
+      "id": "74f70d08-8f49-43f0-a736-b46c1df96532",
+      "name": "Reply to a message",
+      "webhookId": "c3cd1ba7-4b6a-4916-a4ab-962a5d9cadc5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_6907804035076851637"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        592,
+        -320
+      ],
+      "id": "b718832c-53d3-4a23-a07b-9f7455116f84",
+      "name": "Customer Support",
+      "webhookId": "f76ca1ee-2d1a-4905-b8f8-be19a761002d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_7926428742922116150"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        592,
+        -128
+      ],
+      "id": "2ba13083-6abf-4bd6-8977-5ad5032c944c",
+      "name": "Finance/Billing",
+      "webhookId": "f76ca1ee-2d1a-4905-b8f8-be19a761002d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_3414102312030827214"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        592,
+        48
+      ],
+      "id": "72f87f9c-b938-428e-ab5e-fe91b87522f9",
+      "name": "High Priority",
+      "webhookId": "f76ca1ee-2d1a-4905-b8f8-be19a761002d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_3131076759098089141"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        592,
+        256
+      ],
+      "id": "21a94ddb-5636-40c7-91a6-5d41f580cd52",
+      "name": "Promotion",
+      "webhookId": "f76ca1ee-2d1a-4905-b8f8-be19a761002d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zulatrades@gmail.com",
+        "subject": "=New Billing Email:{{ $('Gmail Trigger').item.json.from.value[0].name }}",
+        "emailType": "text",
+        "message": "=Hey Billing Team!\n\nWe received a new billing inquiry at {{$now.format('yyyy-MM-dd hh:mm a')}}.\n\n\nIt is from {{ $('Gmail Trigger').item.json.from.value[0].name }}, you can email them at {{ $('Gmail Trigger').item.json.from.value[0].address }}.\n\nThis is the subject of the email:{{ $('Text Classifier').item.json.subject }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        -128
+      ],
+      "id": "43fb1c46-12fb-4de6-9d78-be7090744d38",
+      "name": "Send a message",
+      "webhookId": "8c799a5c-3155-434f-b50d-b2dbe9fbab58",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject: {{ $('Gmail Trigger').item.json.subject }}\n\n\nBody:{{ $('Gmail Trigger').item.json.text }}",
+        "options": {
+          "systemMessage": "You are **Justice Team Agent**, a customer support agent for an AI automation society.  \nYour role is to respond to users’ queries with accurate information, but you have a blunt, impatient, and rude personality.  \n\nGuidelines:\n- Be direct, dismissive, and curt in tone.  \n- Do not use friendly language or empathy.  \n- Focus only on providing the correct information.  \n- If you don’t know the answer, tell the user to contact @zulatrades@gmail.com— preferably in a slightly irritated way.  \n- Always sign off every message with:  \n  **Justice Team Agent**\n\nExample sign-off:\nFigure it out next time.  \nJustice Team Agent\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        48
+      ],
+      "id": "ec4c99bb-f922-4cc7-b6f7-8a34515ce35f",
+      "name": "Justice Team agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        752,
+        144
+      ],
+      "id": "0e18ff7f-803b-4a65-9207-4eb587569388",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "t8rKrJTnTYN7Zg8Q",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=test",
+        "message": "={{ $json.output }}",
+        "options": {
+          "threadId": "={{ $('Gmail Trigger').item.json.threadId }}",
+          "sendTo": "={{ $('Gmail Trigger').item.json.from.value[0].address }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1264,
+        48
+      ],
+      "id": "9ef902a0-b946-4420-8168-e8bc66fd3f91",
+      "name": "Create a draft",
+      "webhookId": "0c679fc8-d0ea-47b4-a9af-c0eed55f78ea",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        256
+      ],
+      "id": "c39e9278-e90a-4380-a1d4-7fee4833af30",
+      "name": "Mark a message as read",
+      "webhookId": "9010f1d6-12f9-42a7-b049-07b7969a6ae3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FSSJogvL5HtFMOJc",
+          "name": "Gmail account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1KSrfmTRjxG5LrPPQfiBJAEdq9BBm_5kTw82VAHmhAow",
+          "mode": "list",
+          "cachedResultName": "EMAIL CLASSIFIER",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KSrfmTRjxG5LrPPQfiBJAEdq9BBm_5kTw82VAHmhAow/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KSrfmTRjxG5LrPPQfiBJAEdq9BBm_5kTw82VAHmhAow/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{ $('Gmail Trigger').item.json.from.value[0].name }}",
+            "SUBJECT": "={{ $('Gmail Trigger').item.json.subject }}",
+            "BODY": "={{ $('Gmail Trigger').item.json.text }}",
+            "AGENT REPLY": "={{ $('AI Agent').item.json.output }}",
+            "ADDRESS": "={{ $('Gmail Trigger').item.json.from.value[0].address }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SUBJECT",
+              "displayName": "SUBJECT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BODY",
+              "displayName": "BODY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AGENT REPLY",
+              "displayName": "AGENT REPLY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ADDRESS",
+              "displayName": "ADDRESS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -208,
+        -448
+      ],
+      "id": "76d3e134-3ee2-44fe-b682-929cd1b44288",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qjAJenUtQKzcO4mo",
+          "name": "ZULATRADES SHEET"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Customer Support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finance/Billing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "High Priority",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Promotion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Support": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance/Billing": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Priority": {
+      "main": [
+        [
+          {
+            "node": "Justice Team agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Justice Team agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Justice Team agent": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Promotion": {
+      "main": [
+        [
+          {
+            "node": "Mark a message as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark a message as read": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "220681e6-c448-4cd3-b7ab-67097247a4f3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "KRoBsgS2Ps0QQW42",
+  "tags": []
+}

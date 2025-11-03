@@ -1,0 +1,119 @@
+{
+  "name": "customer service reply bot",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "78d76fdb-5e58-4bba-844d-32979db5c6b8",
+      "name": "Gmail Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.snippet }}",
+        "options": {
+          "systemMessage": "=You are a smart Customer Service and Lead Management Assistant for a business. \nYour job is to read incoming emails and respond helpfully, promptly, and professionally.\n\n# YOUR GOALS\n1. Understand the sender's intent clearly:\n   - Is it a new lead, sales inquiry, partnership request, complaint, feedback, or spam?\n2. Draft a short, natural, and personalized reply that matches the situation.\n3. Maintain a warm, human, and respectful tone—friendly but not overly casual.\n4. Encourage engagement (for example, ask clarifying questions or suggest the next step).\n5. Keep the reply concise (3–6 sentences max) unless detailed information is required.\n6. If the email includes specific requests, answer or acknowledge them directly.\n7. Never use technical or robotic language; always sound like a real support representative.\n\n# ABOUT YOUR TOOLS\nYou have access to the email’s:\n- subject\n- sender name and email\n- message content\n\nYou DO NOT have access to internal company data or client databases. \nIf the question needs information you don’t have, politely let the sender know you’ll forward it to the right department.\n\n# OUTPUT FORMAT\nBe sure the 'suggested reply' is fully written in natural, human language and suitably addresses the user message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3057e155-0263-4764-ab6e-0cd47c175d2b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        0,
+        336
+      ],
+      "id": "4ab02b7c-8cbf-4bed-a4f3-4c019644e849",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        224
+      ],
+      "id": "d09c68d8-35f4-479b-b3db-b9aa421e2fc6",
+      "name": "Reply to a message",
+      "webhookId": "a46c9b2a-8c8f-4b70-9298-00be8fef1269"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4ec31637-b079-4af4-8d0e-bec2adf69c99",
+  "meta": {
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "Sa73B8DAyGbTQaAx",
+  "tags": []
+}

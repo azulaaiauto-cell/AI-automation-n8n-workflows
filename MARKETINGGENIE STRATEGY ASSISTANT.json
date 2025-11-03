@@ -1,0 +1,124 @@
+{
+  "name": "marketing",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a senior marketing strategist with over 10 years of experience helping brands grow using creative and data-driven marketing. \nYour job is to generate a clear, customized marketing strategy for the client below based on their form responses.\n\nUse the following data from the form:\n\nFull Name: {{ $json['FULL NAME'] }}\nBusiness Name: {{ $json['BUSINESS NAME'] }}\nIndustry: {{ $json.INDUSTRY }}\nGoal: {{ $json['MAIN MARKETING GOAL'] }}\nBudget: {{ $json.BUDGET }}\nTarget Audience:{{ $json['TARGET AUDIENCE'] }}\nEmail Address: {{ $json['Email'] }}\n---\n\nNow, generate a full marketing strategy that includes:\n\n1. **Overview:** A short summary of the business and its goal.\n2. **Recommended Marketing Channels:** The top platforms or channels (e.g., Instagram, Google Ads, TikTok, Email, etc.) and why they fit the brand.\n3. **Content Plan:** 3–5 creative content ideas that can drive engagement and sales.\n4. **Ad Strategy:** Example ad ideas or campaign concepts that could attract the target audience.\n5. **Budget Breakdown:** Suggest how the client can split their budget effectively across platforms.\n6. **KPIs to Track:** Key metrics to measure performance.\n7. **Next Steps:** What actions the client should take immediately.\n\nEnd your response with a confident, encouraging summary as if you were talking to the client directly — friendly but expert, showing that you understand their business and goals.\n\nKeep the tone:\n- Professional yet conversational  \n- Clear and persuasive  \n- Easy to skim (use short paragraphs and bullet points where possible)\n\n\nNOTE: Do not include any greetings, introductions, summaries or sign-offs in your response. Respond only with requested marketing strategy content, no conversational language or pleasantries.\n\nAlso take note not to give the output with asterics and other haraters. Ensure it is written like a normal text and sounds human.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -128,
+        -128
+      ],
+      "id": "055b14ff-21d6-4e13-b808-3b7e57903df0",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "t8rKrJTnTYN7Zg8Q",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('JotForm Trigger').item.json.Email }}",
+        "subject": "Your Personalized marketing strategy from Marketing Genie",
+        "emailType": "text",
+        "message": "=Hi {{ $('JotForm Trigger').item.json['FULL NAME'].first }},\n\nHere's your AI -Powered marketing strategy tailored to your buisness:\n\n{{ $json.message.content }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        64
+      ],
+      "id": "047d90b8-2810-4ac5-83c9-dfca26f45aa3",
+      "name": "Send a message",
+      "webhookId": "99dc2f58-e949-4ce7-b73c-95c19bc28b5c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "w9ZVzGxAMuslXEsR",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "form": "252996809313064"
+      },
+      "type": "n8n-nodes-base.jotFormTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -272
+      ],
+      "id": "8a3117a3-3b0b-46a7-bd76-d0fbe9da9ca3",
+      "name": "JotForm Trigger",
+      "webhookId": "b62a15b0-9d56-4e94-b3b4-d309b060c0b8",
+      "credentials": {
+        "jotFormApi": {
+          "id": "My8ldBRNA2N3PKkh",
+          "name": "JotForm account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "JotForm Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e2c447e0-0cb0-46c2-b8a6-0baad51f847a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d00720eca55b136520f34e075314e2fc6ef5c1c69d8fef80668321959c2c3164"
+  },
+  "id": "9aAVYYfZ7Al4FXtN",
+  "tags": []
+}
