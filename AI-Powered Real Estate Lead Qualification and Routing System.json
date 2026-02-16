@@ -1,0 +1,869 @@
+{
+  "name": "AI-Powered Real Estate Lead Qualification and Routing System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghl-lead-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "1fa4e3ed-0a3c-4af9-a52d-2619a32bec9b",
+      "name": "Webhook: Receive GHL Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        496
+      ],
+      "webhookId": "971a7003-8d70-4934-9af9-4789c370dd90"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "calendar_link",
+              "value": "https://calendly.com/your-agent/30min",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "agent_name",
+              "value": "Your Real Estate Agent",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "company_name",
+              "value": "Your Real Estate Company",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95672965-11b3-44c7-b954-62268af6eafe",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a real estate lead qualification expert. Analyze the lead data and score them 1-10 based on:\n- Budget alignment (higher budget = higher score)\n- Timeline urgency (sooner = higher score)\n- Property interest specificity (specific needs = higher score)\n- Contact completeness (all fields filled = bonus points)\n\nQualification tiers:\n- Hot (8-10): Strong budget, urgent timeline, specific needs\n- Warm (5-7): Moderate budget, flexible timeline, general interest\n- Cold (1-4): Low budget, distant timeline, vague interest\n\nProvide a personalized message recommendation for each lead."
+        }
+      },
+      "id": "3fb978f3-375e-4f30-8c9c-ea471783513b",
+      "name": "AI Agent: Qualify Lead",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        704,
+        496
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "291e2fc3-ec3d-49f2-a83c-6c21105af14d",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        712,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"score\": {\n      \"type\": \"integer\",\n      \"description\": \"Lead qualification score from 1-10\"\n    },\n    \"qualification\": {\n      \"type\": \"string\",\n      \"enum\": [\"hot\", \"warm\", \"cold\"],\n      \"description\": \"Lead temperature category\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\",\n      \"description\": \"Brief explanation of why this score was assigned\"\n    },\n    \"next_action\": {\n      \"type\": \"string\",\n      \"enum\": [\"book_call\", \"nurture\", \"disqualify\"],\n      \"description\": \"Recommended next step\"\n    },\n    \"recommended_message\": {\n      \"type\": \"string\",\n      \"description\": \"Personalized message text for this lead\"\n    }\n  },\n  \"required\": [\"score\", \"qualification\", \"reasoning\", \"next_action\", \"recommended_message\"]\n}"
+      },
+      "id": "1066b803-caad-4fdd-aa6f-13b53ba30a35",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.score }}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hot Lead (8-10)"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.score }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $json.output.score }}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Warm Lead (5-7)"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.score }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cold Lead (<5)"
+            }
+          ]
+        }
+      },
+      "id": "57292626-6f79-4983-bdd7-b5343138e469",
+      "name": "Route by Lead Score",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lead_name",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_email",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_phone",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "qualification",
+              "value": "={{ $json.output.qualification }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "action_taken",
+              "value": "Hot Lead - Tag Added, Opportunity Created, SMS Sent",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "calendar_link",
+              "value": "={{ $('Workflow Configuration').item.json.calendar_link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "249c9206-3e27-4d19-b7dc-9896ff572cff",
+      "name": "Prepare Hot Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=<__PLACEHOLDER_VALUE__GHL_API_ENDPOINT__>/contacts/{{ $('Webhook: Receive GHL Lead').item.json.body.contact_id }}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <__PLACEHOLDER_VALUE__GHL_API_KEY__>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tags\": [\"Hot Lead\"],\n  \"opportunity\": {\n    \"name\": \"{{ $json.lead_name }} - {{ $('Webhook: Receive GHL Lead').item.json.body.property_interest }}\",\n    \"status\": \"open\",\n    \"value\": \"{{ $('Webhook: Receive GHL Lead').item.json.body.budget }}\"\n  },\n  \"assigned_to\": \"<__PLACEHOLDER_VALUE__AGENT_ID__>\"\n}",
+        "options": {}
+      },
+      "id": "56f900d5-09cb-427c-85f0-229bf606ca5d",
+      "name": "GHL: Hot Lead Actions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "from": "<__PLACEHOLDER_VALUE__YOUR_TWILIO_NUMBER__>",
+        "to": "={{ $json.lead_phone }}",
+        "message": "=Hi {{ $json.lead_name }}! {{ $('AI Agent: Qualify Lead').item.json.output.recommended_message }} Book your call here: {{ $json.calendar_link }}"
+      },
+      "id": "112025e2-3b59-4a36-aae0-9cce6c57b6d3",
+      "name": "Send SMS: Hot Lead",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lead_name",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_email",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_phone",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "qualification",
+              "value": "={{ $json.output.qualification }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "action_taken",
+              "value": "Warm Lead - Tag Added, Nurture Workflow Started, Email Sent",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "personalized_message",
+              "value": "={{ $('AI Agent: Qualify Lead').item.json.output.recommended_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11e7881a-9381-4840-a41f-a03045e10f54",
+      "name": "Prepare Warm Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=<__PLACEHOLDER_VALUE__GHL_API_ENDPOINT__>/contacts/{{ $('Webhook: Receive GHL Lead').item.json.body.contact_id }}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <__PLACEHOLDER_VALUE__GHL_API_KEY__>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tags\": [\"Warm Lead\"],\n  \"workflow_id\": \"<__PLACEHOLDER_VALUE__NURTURE_WORKFLOW_ID__>\",\n  \"start_workflow\": true\n}",
+        "options": {}
+      },
+      "id": "1c7907f2-919f-41e6-ba82-198157f3d3ea",
+      "name": "GHL: Warm Lead Actions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "<__PLACEHOLDER_VALUE__YOUR_EMAIL__>",
+        "toEmail": "={{ $json.lead_email }}",
+        "subject": "=Thanks for your interest in {{ $('Webhook: Receive GHL Lead').item.json.body.property_interest }}",
+        "emailFormat": "text",
+        "text": "=Hi {{ $json.lead_name }},\n\n{{ $json.personalized_message }}\n\nWe'll be reaching out soon with some properties that match your criteria.\n\nBest regards,\n{{ $('Workflow Configuration').item.json.agent_name }}\n{{ $('Workflow Configuration').item.json.company_name }}",
+        "options": {}
+      },
+      "id": "72ffd14b-4024-42bf-9258-f9595e8c1729",
+      "name": "Send Email: Warm Lead",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1728,
+        496
+      ],
+      "webhookId": "20b7ea2b-d749-4a68-a531-7b223f0f4b8c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lead_name",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "lead_email",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "lead_phone",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "qualification",
+              "value": "={{ $json.output.qualification }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "action_taken",
+              "value": "Cold Lead - Tag Added, Auto-Response Sent",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "personalized_message",
+              "value": "={{ $('AI Agent: Qualify Lead').item.json.output.recommended_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50cef038-eb86-4ef7-a887-dba2c8178646",
+      "name": "Prepare Cold Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=<__PLACEHOLDER_VALUE__GHL_API_ENDPOINT__>/contacts/{{ $('Webhook: Receive GHL Lead').item.json.body.contact_id }}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <__PLACEHOLDER_VALUE__GHL_API_KEY__>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tags\": [\"Not Qualified\"]\n}",
+        "options": {}
+      },
+      "id": "eb6bd596-868d-4d35-8617-a940b6c1e84e",
+      "name": "GHL: Cold Lead Actions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "<__PLACEHOLDER_VALUE__YOUR_EMAIL__>",
+        "toEmail": "={{ $json.lead_email }}",
+        "subject": "Thank you for your inquiry",
+        "emailFormat": "text",
+        "text": "=Hi {{ $json.lead_name }},\n\nThank you for reaching out to us about {{ $('Webhook: Receive GHL Lead').item.json.body.property_interest }}.\n\n{{ $json.personalized_message }}\n\nFeel free to contact us if your situation changes.\n\nBest regards,\n{{ $('Workflow Configuration').item.json.agent_name }}\n{{ $('Workflow Configuration').item.json.company_name }}",
+        "options": {}
+      },
+      "id": "d1e1ec6d-4878-4cbc-a65b-b690811676fb",
+      "name": "Send Email: Cold Lead",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1728,
+        688
+      ],
+      "webhookId": "bf7b0250-9c45-4428-8652-7aa67a5f28ea"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "Timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "Lead Name",
+              "value": "={{ $json.lead_name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "Email",
+              "value": "={{ $json.lead_email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "Phone",
+              "value": "={{ $json.lead_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "Property Interest",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.property_interest }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "Budget",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "Timeline",
+              "value": "={{ $('Webhook: Receive GHL Lead').item.json.body.timeline }}",
+              "type": "string"
+            },
+            {
+              "id": "id-8",
+              "name": "Score",
+              "value": "={{ $json.score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-9",
+              "name": "Qualification",
+              "value": "={{ $json.qualification }}",
+              "type": "string"
+            },
+            {
+              "id": "id-10",
+              "name": "Action Taken",
+              "value": "={{ $json.action_taken }}",
+              "type": "string"
+            },
+            {
+              "id": "id-11",
+              "name": "Reasoning",
+              "value": "={{ $('AI Agent: Qualify Lead').item.json.output.reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "62329f4e-b343-4046-be10-cb4197cc94dd",
+      "name": "Prepare Log Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1952,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "<__PLACEHOLDER_VALUE__LEAD_LOG_SPREADSHEET__>"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": null
+        }
+      },
+      "id": "b7945bf0-8760-4baa-8515-7662538129bb",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2176,
+        496
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "98ee1c89-44d1-40fb-ae40-251e07b805fe",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        256,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "<__PLACEHOLDER_VALUE__YOUR_EMAIL__>",
+        "toEmail": "<__PLACEHOLDER_VALUE__ADMIN_EMAIL__>",
+        "subject": "⚠️ Error in Lead Qualification Workflow",
+        "emailFormat": "text",
+        "text": "=An error occurred in the lead qualification workflow:\n\nWorkflow: {{ $json.workflow.name }}\nExecution ID: {{ $json.execution.id }}\nError Node: {{ $json.node.name }}\nError Message: {{ $json.error.message }}\n\nTimestamp: {{ new Date().toISOString() }}\n\nPlease check the workflow and resolve the issue.",
+        "options": {}
+      },
+      "id": "5066ef5a-e23a-4bfc-be7f-080792ab0249",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        912
+      ],
+      "webhookId": "35127520-b93b-4ef8-8a8c-035ed391b4d9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: Receive GHL Lead": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "AI Agent: Qualify Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent: Qualify Lead",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent: Qualify Lead",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent: Qualify Lead": {
+      "main": [
+        [
+          {
+            "node": "Route by Lead Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Lead Score": {
+      "main": [
+        [
+          {
+            "node": "Prepare Hot Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Warm Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Cold Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Hot Lead Data": {
+      "main": [
+        [
+          {
+            "node": "GHL: Hot Lead Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: Hot Lead Actions": {
+      "main": [
+        [
+          {
+            "node": "Send SMS: Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS: Hot Lead": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Warm Lead Data": {
+      "main": [
+        [
+          {
+            "node": "GHL: Warm Lead Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: Warm Lead Actions": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Warm Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Warm Lead": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cold Lead Data": {
+      "main": [
+        [
+          {
+            "node": "GHL: Cold Lead Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL: Cold Lead Actions": {
+      "main": [
+        [
+          {
+            "node": "Send Email: Cold Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email: Cold Lead": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Data": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6a08e49b-f3e5-459b-9b61-42d31a0637f9",
+  "meta": {
+    "instanceId": "2fc431ada7e977a88802b7a99bf2abc7e54612486ff260902dcdc5969fcc56e2"
+  },
+  "id": "Nh6OxLdsVpS5RZ6So02EB",
+  "tags": []
+}
